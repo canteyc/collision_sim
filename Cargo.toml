@@ -8,6 +8,4 @@ edition = "2018"
 
 [dependencies]
 sssf = "0.1.0"
-
-[dev-dependencies]
 approx = "0.5.0"

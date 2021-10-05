@@ -1,30 +1,32 @@
 use std::ops::{Add, Mul, Sub};
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
 
 #[derive(Debug, PartialEq)]
-struct Point {
+pub struct Point {
     x: f64,
     y: f64,
     z: f64,
 }
 
 impl Point {
-    fn new() -> Point {
+    pub fn new() -> Point {
         Point::new3(0., 0., 0.)
     }
 
-    fn new2(x: f64, y: f64) -> Point {
+    pub fn new2(x: f64, y: f64) -> Point {
         Point::new3(x, y, 0.)
     }
 
-    fn new3(x: f64, y: f64, z: f64) -> Point {
+    pub fn new3(x: f64, y: f64, z: f64) -> Point {
         Point {x, y, z}
     }
 
-    fn mag(&self) -> f64 {
+    pub fn mag(&self) -> f64 {
         f64::sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
     }
 
-    fn unit(&self) -> Point {
+    pub fn unit(&self) -> Point {
         self * (1. / self.mag())
     }
 }
@@ -70,6 +72,44 @@ impl Mul for &Point {
 
     fn mul(self, rhs: Self) -> Self::Output {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+}
+
+impl AbsDiffEq for &Point {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> f64 {
+        1e-3
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: f64) -> bool {
+        f64::abs_diff_eq(&self.x, &other.x, epsilon)
+            && f64::abs_diff_eq(&self.y, &other.y, epsilon)
+            && f64::abs_diff_eq(&self.z, &other.z, epsilon)
+    }
+}
+
+impl RelativeEq for &Point {
+    fn default_max_relative() -> f64 {
+        1e-3
+    }
+
+    fn relative_eq(&self, other: &Self, epsilon: f64, max_relative: f64) -> bool {
+        f64::relative_eq(&self.x, &other.x, epsilon, max_relative)
+            && f64::relative_eq(&self.y, &other.y, epsilon, max_relative)
+            && f64::relative_eq(&self.z, &other.z, epsilon, max_relative)
+    }
+}
+
+impl UlpsEq for &Point {
+    fn default_max_ulps() -> u32 {
+        f64::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: f64, max_ulps: u32) -> bool {
+        f64::ulps_eq(&self.x, &other.x, epsilon, max_ulps)
+            && f64::ulps_eq(&self.y, &other.y, epsilon, max_ulps)
+            && f64::ulps_eq(&self.z, &other.z, epsilon, max_ulps)
     }
 }
 
@@ -205,5 +245,14 @@ mod test {
         let pt1_unit = pt1.unit();
 
         assert_eq!(pt1_unit, Point::new3(-3. / f64::sqrt(50.), 4. / f64::sqrt(50.), -5. / f64::sqrt(50.)));
+    }
+
+    #[test]
+    fn relative_eq() {
+        let pt1 = point12();
+        let pt2 = &pt1 + &Point::new2(1e-6, 1e-6);
+
+        assert_ne!(pt1, pt2);
+        assert_relative_eq!(&pt1, &pt2);
     }
 }
